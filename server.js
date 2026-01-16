@@ -70,10 +70,12 @@ app.use(express.json());
 // Import Routes
 const documentRoutes = require("./routes/documentRoutes");
 const pdfRoutes = require("./routes/pdfRoutes");
+const advancedRoutes = require("./routes/advancedRoutes");
 
 // Mount Routes
 app.use("/convert/document", documentRoutes);
 app.use("/convert/pdf", pdfRoutes);
+app.use("/convert/advanced", advancedRoutes);
 
 // API Usage Middleware
 app.use(async (req, res, next) => {
