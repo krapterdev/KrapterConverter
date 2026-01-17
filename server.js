@@ -66,6 +66,7 @@ createDefaultUser();
 
 app.use(cors({ origin: process.env.FRONTEND_URL }));
 app.use(express.json());
+app.use(express.static("public")); // Serve frontend interface
 
 // Import Routes
 const documentRoutes = require("./routes/documentRoutes");

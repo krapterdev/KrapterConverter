@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krapter PDF Tools</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        .card { border: 1px solid #ccc; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; }
+        h2 { margin-top: 0; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        input, select, button { padding: 0.5rem; font-size: 1rem; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 1rem; padding: 1rem; background: #f0f0f0; display: none; }
+    </style>
+</head>
+<body>
+    <h1>Krapter PDF Tools</h1>
+
+    <!-- PDF Splitter -->
+    <div class="card">
+        <h2>PDF Splitter (10k+ Pages)</h2>
+        <form id="splitForm">
+            <div class="form-group">
+                <label>Select PDF File:</label>
+                <input type="file" name="file" accept=".pdf" required>
+            </div>
+            <div class="form-group">
+                <label>Mode:</label>
+                <select name="mode" id="splitMode">
+                    <option value="chunk">Split by Chunk (Recommended)</option>
+                    <option value="extract">Extract Pages</option>
+                    <option value="single">Single Page Split</option>
+                </select>
+            </div>
+            <div class="form-group" id="chunkInput">
+                <label>Pages per Chunk:</label>
+                <input type="number" name="chunkSize" value="500" min="1">
+            </div>
+            <div class="form-group" id="rangeInput" style="display:none;">
+                <label>Page Range (e.g., 1-5, 10):</label>
+                <input type="text" name="range" placeholder="1-5, 10">
+            </div>
+            <button type="submit">Split PDF</button>
+        </form>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        // Toggle inputs based on mode
+        document.getElementById('splitMode').addEventListener('change', (e) => {
+            const mode = e.target.value;
+            document.getElementById('chunkInput').style.display = mode === 'chunk' ? 'block' : 'none';
+            document.getElementById('rangeInput').style.display = mode === 'extract' ? 'block' : 'none';
+        });
+
+        // Handle Split Form
+        document.getElementById('splitForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Processing... Please wait (this may take time for large files).';
+
+            try {
+                const response = await fetch('/convert/pdf/split', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <h3 style="color:green">Success!</h3>
+                        <p>${data.message}</p>
+                        <a href="${data.downloadUrl}" target="_blank"><button>Download Result</button></a>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<h3 style="color:red">Error</h3><p>${data.error}</p>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<h3 style="color:red">Error</h3><p>Request failed: ${err.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
