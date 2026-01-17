@@ -64,9 +64,11 @@ router.post("/split", upload.single("file"), async (req, res) => {
     const { mode = "chunk", chunkSize = 10, range = "" } = req.body;
 
     // Load PDF
+    console.log(`Loading PDF: ${req.file.originalname}`);
     const existingPdfBytes = fs.readFileSync(inputPath);
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const totalPages = pdfDoc.getPageCount();
+    console.log(`Total Pages Detected: ${totalPages}`);
     const originalName = path.parse(req.file.originalname).name;
 
     const zip = new JSZip();
@@ -79,6 +81,11 @@ router.post("/split", upload.single("file"), async (req, res) => {
       for (let i = 0; i < totalPages; i += size) {
         const subDoc = await PDFDocument.create();
         const end = Math.min(i + size, totalPages);
+        console.log(
+          `Processing chunk ${Math.floor(i / size) + 1}: Pages ${
+            i + 1
+          } to ${end}`
+        );
 
         // Copy pages
         const pageIndices = [];
