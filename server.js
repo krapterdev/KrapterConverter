@@ -10,7 +10,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const JSZip = require("jszip");
 const PDFDocument = require("pdfkit");
-const pdf = require("pdf-poppler");
+const { fromPath } = require("pdf2pic");
 
 // Import Models
 const User = require("./models/User");
@@ -935,14 +935,29 @@ app.post(
 
       // PDF to image conversion options
       const options = {
+        density: 100,
+        saveFilename: "page",
+        savePath: outputDir,
         format: format.toLowerCase(),
-        out_dir: outputDir,
-        out_prefix: "page",
-        page: null, // Convert all pages
+        width: 800,
+        height: 1100,
       };
 
-      // Convert PDF to images
-      const imageFiles = await pdf.convert(pdfPath, options);
+      // Convert PDF to images using pdf2pic
+      const convert = fromPath(pdfPath, options);
+
+      const { PDFDocument } = require("pdf-lib");
+      const pdfBytes = fs.readFileSync(pdfPath);
+      const pdfDoc = await PDFDocument.load(pdfBytes);
+      const pageCount = pdfDoc.getPageCount();
+
+      const imageFiles = [];
+      for (let i = 1; i <= pageCount; i++) {
+        const result = await convert(i, { responseType: "image" });
+        if (result.path) {
+          imageFiles.push(result.path);
+        }
+      }
 
       if (!imageFiles || imageFiles.length === 0) {
         throw new Error("No pages found in PDF");
@@ -953,7 +968,7 @@ app.post(
 
       // Process each page image
       for (let i = 0; i < imageFiles.length; i++) {
-        const imagePath = path.join(outputDir, `page-${i + 1}.${format}`);
+        const imagePath = imageFiles[i];
 
         if (fs.existsSync(imagePath)) {
           let imageBuffer = fs.readFileSync(imagePath);
